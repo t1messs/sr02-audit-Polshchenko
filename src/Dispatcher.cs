@@ -117,18 +117,16 @@ public class Dispatcher
             // вільний або везе, але бере ще одне (до 2)
             bool canTakeRide = driver.Status == "free"
                 || driver.Status == "onride" && driver.ActiveRides < MaxActiveRides;
-            if (canTakeRide)
+            if (!canTakeRide)
+                continue;
+            bool hasRequiredSeat = !ride.ChildSeat || driver.HasChildSeat;
+            if (!hasRequiredSeat)
+                continue;
+            double distance = Km(driver.X, driver.Y, ride.PickupX, ride.PickupY);
+            if (distance <= nearestKm)
             {
-                bool hasRequiredSeat = !ride.ChildSeat || driver.HasChildSeat;
-                if (hasRequiredSeat)
-                {
-                    double distance = Km(driver.X, driver.Y, ride.PickupX, ride.PickupY);
-                    if (distance <= nearestKm)
-                    {
-                        nearest = driver;
-                        nearestKm = distance;
-                    }
-                }
+                nearest = driver;
+                nearestKm = distance;
             }
         }
 
