@@ -25,6 +25,19 @@
 - `safety-net` — готова сітка характеризаційних тестів;
 - `after-refactoring` — усі рефакторинги виконано.
 
+## Документи аудиту (`docs/`)
+
+| Файл | Розділ звіту |
+|---|---|
+| `inventory.md`, `metrics-before.csv`, `cc-tool-before.txt`, `cc-before.png` | 1. Інвентаризація й метрики |
+| `defects.md` | 2. Реєстр дефектів |
+| `safety-net.md` | 3. Страхувальна сітка |
+| `plan.md` | 4. План рефакторингу |
+| `refactorings.md` | 5. Виконані рефакторинги |
+| `results.md`, `metrics-after.csv`, `cc-tool-after.txt`, `cc-compare.png`, `out-before.txt`, `out-after.txt` | 6. Метрики після й доказ незмінності поведінки |
+| `debt.md` | 7. Реєстр технічного боргу |
+| `decisions.md` | журнал рішень (Р-01…Р-06) |
+
 ## Як запустити
 
 ```bash

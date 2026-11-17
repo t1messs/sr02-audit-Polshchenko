@@ -53,7 +53,7 @@ def main():
         ax.barh([i - 0.2 for i in y], a, height=0.38, color=AFTER, label="після рефакторингу")
         for i, n in enumerate(names):
             ax.text(b[i] + 0.2, i + 0.2, str(b[i]), va="center", fontsize=8, color=INK)
-            label = str(a[i]) if n in after else "0 (метод видалено)"
+            label = str(a[i]) if n in after else "0 (метод видалено або перенесено)"
             ax.text(a[i] + 0.2, i - 0.2, label, va="center", fontsize=8, color=INK)
         ax.legend(loc="lower right", frameon=False)
         title = "Цикломатична складність методів до і після рефакторингу"
