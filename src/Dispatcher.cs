@@ -184,6 +184,8 @@ public class Dispatcher
             r.StartedAt = Now();
         if (to == RideStatus.Completed)
         {
+            // До Completed веде лише Assigned -> InProgress, тож водій уже призначений.
+            System.Diagnostics.Debug.Assert(d != null, "Completed ride must have a driver");
             r.Fare = fares.Calc(r);
             d.ActiveRides--;
             if (d.ActiveRides == 0)
