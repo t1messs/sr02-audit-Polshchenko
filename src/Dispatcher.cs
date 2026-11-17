@@ -221,15 +221,4 @@ public class Dispatcher
     {
         return Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
     }
-
-    // бали для старого вибору: менше - краще
-    private double ScoreDriver(Driver d, double dist)
-    {
-        double s = dist * 10 - d.Rating * 3;
-        if (d.TripsToday > 12)
-            s = s + 5;
-        if (d.HasChildSeat && d.Status != "free")
-            s = s + 2;
-        return s;
-    }
 }
