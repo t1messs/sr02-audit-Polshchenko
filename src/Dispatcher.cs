@@ -83,76 +83,76 @@ public class Dispatcher
     public int Assign(int rideId, double maxKm, bool allowUpgrade)
     {
         LastNote = "";
-        Ride r = repo.FindRide(rideId);
-        if (r == null)
+        Ride ride = repo.FindRide(rideId);
+        if (ride == null)
         {
             LastNote = "ride #" + rideId + " not found";
             return -1;
         }
-        if (r.Status != RideStatus.Created)
+        if (ride.Status != RideStatus.Created)
         {
-            LastNote = "ride #" + r.Id + " is " + r.Status;
+            LastNote = "ride #" + ride.Id + " is " + ride.Status;
             return -2;
         }
         // коефіцієнт: зона + нестача машин
-        double k = 1.0;
-        if (DispatchStore.ZoneSurge.ContainsKey(r.Zone))
-            k = DispatchStore.ZoneSurge[r.Zone];
-        int waiting = repo.count_waiting();
-        int freeCnt = CountFree();
-        if (waiting > freeCnt)
+        double surge = 1.0;
+        if (DispatchStore.ZoneSurge.ContainsKey(ride.Zone))
+            surge = DispatchStore.ZoneSurge[ride.Zone];
+        int waitingRides = repo.CountWaiting();
+        int freeDrivers = CountFree();
+        if (waitingRides > freeDrivers)
         {
-            k = k + SurgePerExtraRide * (waiting - freeCnt);
+            surge = surge + SurgePerExtraRide * (waitingRides - freeDrivers);
             if (IsRushHour())
-                k = k + RushHourSurge;
+                surge = surge + RushHourSurge;
         }
-        r.Surge = Math.Min(k, MaxSurge);
+        ride.Surge = Math.Min(surge, MaxSurge);
 
-        Driver best = null;
-        double bestKm = maxKm;
-        double minRating = r.CarClass == "BUSINESS" ? MinBusinessRating : MinRating;
-        foreach (Driver d in repo.Drivers)
+        Driver nearest = null;
+        double nearestKm = maxKm;
+        double minRating = ride.CarClass == "BUSINESS" ? MinBusinessRating : MinRating;
+        foreach (Driver driver in repo.Drivers)
         {
-            if (d.CarClass != r.CarClass || d.Rating <= minRating)
+            if (driver.CarClass != ride.CarClass || driver.Rating <= minRating)
                 continue;
             // вільний або везе, але бере ще одне (до 2)
-            bool canTakeRide = d.Status == "free"
-                || d.Status == "onride" && d.ActiveRides < MaxActiveRides;
+            bool canTakeRide = driver.Status == "free"
+                || driver.Status == "onride" && driver.ActiveRides < MaxActiveRides;
             if (canTakeRide)
             {
-                bool hasRequiredSeat = !r.ChildSeat || d.HasChildSeat;
+                bool hasRequiredSeat = !ride.ChildSeat || driver.HasChildSeat;
                 if (hasRequiredSeat)
                 {
-                    double dist = Km(d.X, d.Y, r.PickupX, r.PickupY);
-                    if (dist <= bestKm)
+                    double distance = Km(driver.X, driver.Y, ride.PickupX, ride.PickupY);
+                    if (distance <= nearestKm)
                     {
-                        best = d;
-                        bestKm = dist;
+                        nearest = driver;
+                        nearestKm = distance;
                     }
                 }
             }
         }
 
         // економу немає - даємо комфорт за ціною економу
-        if (best == null && allowUpgrade && r.CarClass == "ECO")
+        if (nearest == null && allowUpgrade && ride.CarClass == "ECO")
         {
-            r.CarClass = "COMFORT";
-            Console.WriteLine("  upgrade: ride #" + r.Id + " ECO -> COMFORT");
+            ride.CarClass = "COMFORT";
+            Console.WriteLine("  upgrade: ride #" + ride.Id + " ECO -> COMFORT");
             return Assign(rideId, maxKm, false);
         }
-        if (best == null)
+        if (nearest == null)
         {
-            LastNote = "no car for ride #" + r.Id + " within " + maxKm + " km";
+            LastNote = "no car for ride #" + ride.Id + " within " + maxKm + " km";
             return -3;
         }
-        r.DriverId = best.Id;
-        r.PickupKm = Math.Round(bestKm, 1);
-        r.Status = RideStatus.Assigned;
-        r.AssignedAt = Now();
-        best.Status = "onride";
-        best.ActiveRides++;
-        AuditLog.Write("ride #" + r.Id + " -> driver " + best.Id + ", surge " + r.Surge);
-        return best.Id;
+        ride.DriverId = nearest.Id;
+        ride.PickupKm = Math.Round(nearestKm, 1);
+        ride.Status = RideStatus.Assigned;
+        ride.AssignedAt = Now();
+        nearest.Status = "onride";
+        nearest.ActiveRides++;
+        AuditLog.Write("ride #" + ride.Id + " -> driver " + nearest.Id + ", surge " + ride.Surge);
+        return nearest.Id;
     }
 
     // додаток водія: на місці -> в дорозі -> завершено

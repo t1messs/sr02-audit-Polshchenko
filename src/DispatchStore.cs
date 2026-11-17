@@ -74,7 +74,7 @@ public class DispatchStore
         return null;
     }
 
-    public int count_waiting()
+    public int CountWaiting()
     {
         int n = 0;
         foreach (Ride r in Rides)
