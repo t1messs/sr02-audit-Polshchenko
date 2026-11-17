@@ -94,7 +94,27 @@ public class Dispatcher
             LastNote = "ride #" + ride.Id + " is " + ride.Status;
             return -2;
         }
-        // коефіцієнт: зона + нестача машин
+        ride.Surge = SurgeFor(ride);
+        Driver nearest = FindNearestDriver(ride, maxKm, out double nearestKm);
+
+        // економу немає - даємо комфорт (клас поїздки змінюється, див. TD-04)
+        if (nearest == null && allowUpgrade && ride.CarClass == "ECO")
+        {
+            ride.CarClass = "COMFORT";
+            Console.WriteLine("  upgrade: ride #" + ride.Id + " ECO -> COMFORT");
+            return Assign(rideId, maxKm, false);
+        }
+        if (nearest == null)
+        {
+            LastNote = "no car for ride #" + ride.Id + " within " + maxKm + " km";
+            return -3;
+        }
+        return AssignDriver(ride, nearest, nearestKm);
+    }
+
+    // коефіцієнт: зона + нестача машин + година пік
+    private double SurgeFor(Ride ride)
+    {
         double surge = 1.0;
         if (DispatchStore.ZoneSurge.ContainsKey(ride.Zone))
             surge = DispatchStore.ZoneSurge[ride.Zone];
@@ -106,10 +126,14 @@ public class Dispatcher
             if (IsRushHour())
                 surge = surge + RushHourSurge;
         }
-        ride.Surge = Math.Min(surge, MaxSurge);
+        return Math.Min(surge, MaxSurge);
+    }
 
+    // найближчий придатний водій у радіусі maxKm (межа включно)
+    private Driver FindNearestDriver(Ride ride, double maxKm, out double nearestKm)
+    {
         Driver nearest = null;
-        double nearestKm = maxKm;
+        nearestKm = maxKm;
         foreach (Driver driver in repo.Drivers)
         {
             if (driver.CarClass != ride.CarClass || driver.Rating <= MinRatingFor(ride.CarClass))
@@ -129,27 +153,20 @@ public class Dispatcher
                 nearestKm = distance;
             }
         }
+        return nearest;
+    }
 
-        // економу немає - даємо комфорт за ціною економу
-        if (nearest == null && allowUpgrade && ride.CarClass == "ECO")
-        {
-            ride.CarClass = "COMFORT";
-            Console.WriteLine("  upgrade: ride #" + ride.Id + " ECO -> COMFORT");
-            return Assign(rideId, maxKm, false);
-        }
-        if (nearest == null)
-        {
-            LastNote = "no car for ride #" + ride.Id + " within " + maxKm + " km";
-            return -3;
-        }
-        ride.DriverId = nearest.Id;
-        ride.PickupKm = Math.Round(nearestKm, 1);
+    // фіксує призначення: поїздка, водій, журнал
+    private int AssignDriver(Ride ride, Driver driver, double pickupKm)
+    {
+        ride.DriverId = driver.Id;
+        ride.PickupKm = Math.Round(pickupKm, 1);
         ride.Status = RideStatus.Assigned;
         ride.AssignedAt = Now();
-        nearest.Status = "onride";
-        nearest.ActiveRides++;
-        AuditLog.Write("ride #" + ride.Id + " -> driver " + nearest.Id + ", surge " + ride.Surge);
-        return nearest.Id;
+        driver.Status = "onride";
+        driver.ActiveRides++;
+        AuditLog.Write("ride #" + ride.Id + " -> driver " + driver.Id + ", surge " + ride.Surge);
+        return driver.Id;
     }
 
     // додаток водія: на місці -> в дорозі -> завершено
