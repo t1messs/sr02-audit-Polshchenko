@@ -14,6 +14,12 @@ public class Dispatcher
         repo = store;
     }
 
+    // Шов для тестів (М5, прийом 2): тест підміняє годинник у класі-нащадку.
+    protected virtual DateTime Now()
+    {
+        return DateTime.Now;
+    }
+
     // new order from operator or website; returns id or -1
     public int CreateRide(string name, string phone, double px, double py, double dx, double dy,
         string carClass, bool childSeat, string zone)
@@ -99,7 +105,7 @@ public class Dispatcher
             best = repo.Drivers.Find(x => x.Zone == r.Zone);
             r.DriverId = best.Id;
             r.Status = RideStatus.Assigned;
-            r.AssignedAt = DateTime.Now;
+            r.AssignedAt = Now();
             best.Status = "onride";
             best.ActiveRides++;
             AuditLog.Write("ride #" + r.Id + " -> driver " + best.Id + ", surge " + r.Surge);
@@ -152,7 +158,7 @@ public class Dispatcher
         r.DriverId = best.Id;
         r.PickupKm = Math.Round(bestKm, 1);
         r.Status = RideStatus.Assigned;
-        r.AssignedAt = DateTime.Now;
+        r.AssignedAt = Now();
         best.Status = "onride";
         best.ActiveRides++;
         AuditLog.Write("ride #" + r.Id + " -> driver " + best.Id + ", surge " + r.Surge);
@@ -185,7 +191,7 @@ public class Dispatcher
         }
         Driver d = repo.FindDriver(r.DriverId);
         if (to == RideStatus.InProgress)
-            r.StartedAt = DateTime.Now;
+            r.StartedAt = Now();
         if (to == RideStatus.Completed)
         {
             r.Fare = fares.Calc(r);
@@ -216,7 +222,7 @@ public class Dispatcher
     // rush hour 7-10 and 17-20 (local time)
     private bool IsRushHour()
     {
-        int h = DateTime.Now.Hour;
+        int h = Now().Hour;
         return h >= 7 && h < 10 || h >= 17 && h < 20;
     }
 
