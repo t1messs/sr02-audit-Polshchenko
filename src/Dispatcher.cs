@@ -3,6 +3,28 @@ namespace TaxiDispatch;
 // Диспетчер: замовлення, призначення водіїв, статуси
 public class Dispatcher
 {
+    // Коефіцієнт попиту: надбавка за кожне замовлення понад кількість вільних машин,
+    // надбавка в години пік і стеля коефіцієнта.
+    private const double SurgePerExtraRide = 0.15;
+    private const double RushHourSurge = 0.2;
+    private const double MaxSurge = 2.5;
+
+    // Години пік: [7; 10) і [17; 20) за місцевим часом.
+    private const int MorningRushStart = 7;
+    private const int MorningRushEnd = 10;
+    private const int EveningRushStart = 17;
+    private const int EveningRushEnd = 20;
+
+    // Рейтинг водія має бути строго вищим за поріг (див. TD-03 у реєстрі боргу).
+    private const double MinRating = 4.0;
+    private const double MinBusinessRating = 4.7;
+
+    // Водій у дорозі бере ще одне замовлення, доки активних поїздок менше ніж 2.
+    private const int MaxActiveRides = 2;
+
+    // Телефон після нормалізації: +380XXXXXXXXX.
+    private const int PhoneLength = 13;
+
     private DispatchStore repo;
     private FareCalculator fares = new FareCalculator();
     public string LastNote;     // причина відмови для оператора
@@ -31,7 +53,7 @@ public class Dispatcher
         string p = phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
         if (p.StartsWith("0"))
             p = "+38" + p;
-        if (p.Length != 13)
+        if (p.Length != PhoneLength)
         {
             LastNote = "invalid phone " + phone;
             return -1;
@@ -80,11 +102,11 @@ public class Dispatcher
         int freeCnt = CountFree();
         if (waiting > freeCnt)
         {
-            k = k + 0.15 * (waiting - freeCnt);
+            k = k + SurgePerExtraRide * (waiting - freeCnt);
             if (IsRushHour())
-                k = k + 0.2;
+                k = k + RushHourSurge;
         }
-        r.Surge = Math.Min(k, 2.5);
+        r.Surge = Math.Min(k, MaxSurge);
         //double k = 1 + repo.CountWaiting() * 0.05;
         //if (r.Zone == "AIRPORT")
         //    k = k + 0.3;
@@ -97,14 +119,13 @@ public class Dispatcher
 
         Driver best = null;
         double bestKm = maxKm;
-        // мін. рейтинг 4.0, бізнес - від 4.7 включно
-        double minRating = r.CarClass == "BUSINESS" ? 4.7 : 4.0;
+        double minRating = r.CarClass == "BUSINESS" ? MinBusinessRating : MinRating;
         foreach (Driver d in repo.Drivers)
         {
             if (d.CarClass != r.CarClass || d.Rating <= minRating)
                 continue;
             // вільний або везе, але бере ще одне (до 2)
-            if (d.Status == "free" || d.Status == "onride" && d.ActiveRides < 2)
+            if (d.Status == "free" || d.Status == "onride" && d.ActiveRides < MaxActiveRides)
             {
                 if (!r.ChildSeat || d.HasChildSeat)
                 {
@@ -204,11 +225,11 @@ public class Dispatcher
         return n;
     }
 
-    // rush hour 7-10 and 17-20 (local time)
     private bool IsRushHour()
     {
         int h = Now().Hour;
-        return h >= 7 && h < 10 || h >= 17 && h < 20;
+        return h >= MorningRushStart && h < MorningRushEnd
+            || h >= EveningRushStart && h < EveningRushEnd;
     }
 
     public static double Km(double x1, double y1, double x2, double y2)
