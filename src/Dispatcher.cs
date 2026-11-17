@@ -50,18 +50,13 @@ public class Dispatcher
             LastNote = "name is empty";
             return -1;
         }
-        string p = phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
-        if (p.StartsWith("0"))
-            p = "+38" + p;
+        string p = NormalizePhone(phone);
         if (p.Length != PhoneLength)
         {
             LastNote = "invalid phone " + phone;
             return -1;
         }
-        // temp: old website sends "standard", "eco", "" - treat as ECO
-        string cls = carClass == null ? "ECO" : carClass.Trim().ToUpper();
-        if (cls != "COMFORT" && cls != "BUSINESS" && cls != "VAN")
-            cls = "ECO";
+        string cls = NormalizeCarClass(carClass);
         Ride r = new Ride();
         r.Id = DispatchStore.nextRideId++;
         r.Passenger = name.Trim();
@@ -76,6 +71,24 @@ public class Dispatcher
         repo.Rides.Add(r);
         AuditLog.Write("new ride #" + r.Id + " " + p + " " + cls);
         return r.Id;
+    }
+
+    // прибирає пробіли, дефіси й дужки; місцевий номер 0XXXXXXXXX доповнює до +380XXXXXXXXX
+    private static string NormalizePhone(string phone)
+    {
+        string p = phone.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+        if (p.StartsWith("0"))
+            p = "+38" + p;
+        return p;
+    }
+
+    // старий сайт надсилає "standard", "eco", "" — усе, крім відомих класів, вважаємо ECO
+    private static string NormalizeCarClass(string carClass)
+    {
+        string cls = carClass == null ? "ECO" : carClass.Trim().ToUpper();
+        if (cls != "COMFORT" && cls != "BUSINESS" && cls != "VAN")
+            cls = "ECO";
+        return cls;
     }
 
     // Призначення водія. Повертає Id водія або
