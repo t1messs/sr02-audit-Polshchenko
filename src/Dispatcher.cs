@@ -110,10 +110,9 @@ public class Dispatcher
 
         Driver nearest = null;
         double nearestKm = maxKm;
-        double minRating = ride.CarClass == "BUSINESS" ? MinBusinessRating : MinRating;
         foreach (Driver driver in repo.Drivers)
         {
-            if (driver.CarClass != ride.CarClass || driver.Rating <= minRating)
+            if (driver.CarClass != ride.CarClass || driver.Rating <= MinRatingFor(ride.CarClass))
                 continue;
             // вільний або везе, але бере ще одне (до 2)
             bool canTakeRide = driver.Status == "free"
@@ -200,6 +199,11 @@ public class Dispatcher
         r.Status = to;
         AuditLog.Write("ride #" + r.Id + " " + to);
         return true;
+    }
+
+    private static double MinRatingFor(string carClass)
+    {
+        return carClass == "BUSINESS" ? MinBusinessRating : MinRating;
     }
 
     public int CountFree()
