@@ -31,7 +31,6 @@ public class ReportService
     // водії: статус і заробіток за зміну
     public void PrintFleet()
     {
-        int free = 0, busy = 0;
         foreach (Driver d in repo.Drivers)
         {
             string st = d.Status;
@@ -39,6 +38,10 @@ public class ReportService
                 st = st + " x" + d.ActiveRides;
             Console.WriteLine("  " + d.Id + " " + d.Name + ", " + d.CarClass + " " + d.Rating
                 + ", " + st + ", earned " + d.EarnedToday);
+        }
+        int free = 0, busy = 0;
+        foreach (Driver d in repo.Drivers)
+        {
             if (d.Status == "free")
                 free++;
             else if (d.Status == "onride")
