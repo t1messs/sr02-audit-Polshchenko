@@ -1,0 +1,51 @@
+=== Taxi Shvydko - dispatch console ===
+drivers on shift: 9, surge zones: 4
+-- new orders
+  order #1 Olena Kovalenko, ECO, zone CENTER
+  order #2 Maksym Rudenko, BUSINESS, zone CENTER
+  order #3 Iryna Melnyk, ECO + child seat, zone AIRPORT
+  order #4 Taras Hnatiuk, ECO, zone STATION
+  order #5 Oksana Rudenko, ECO, zone SUBURB
+  error: name is empty
+  error: invalid phone 12-34
+-- dispatch
+  #1 (3 km) -> Ivan Petrenko, 1,6 km away, surge 1
+  #2 (3 km) -> Serhii Tkachuk, 1,6 km away, surge 1
+  #3 (3 km) -> Natalia Kravets, 1,1 km away, surge 1,3
+  upgrade: ride #4 ECO -> COMFORT
+  #4 (3 km) -> Dmytro Savchenko, 1,1 km away, surge 1,2
+  #5 (3 km): -3, no car for ride #5 within 3 km
+  ! ride #5: Created -> Completed rejected
+  #5 -> Completed: refused
+  #5 (10 km) -> Natalia Kravets, 9,2 km away, surge 0,9
+  #99 (3 km): -1, ride #99 not found
+-- status changes
+  #1 -> InProgress: ok
+  #1 -> Completed: ok, 103 UAH
+  #2 -> Cancelled: ok, 80 UAH
+  #2 (3 km): -2, ride #2 is Cancelled
+  ! ride #3: Assigned -> Completed rejected
+  #3 -> Completed: refused
+  #3 -> InProgress: ok
+  #3 -> Completed: ok, 283 UAH
+  #4 -> InProgress: ok
+  #4 -> Completed: ok, 95 UAH
+  #5 -> InProgress: ok
+  #77 -> Cancelled: refused
+-- rides
+  #1 Olena Kovalenko, ECO, Completed, driver Ivan Petrenko, 103 UAH
+  #2 Maksym Rudenko, BUSINESS, Cancelled, driver Serhii Tkachuk, 80 UAH
+  #3 Iryna Melnyk, ECO, Completed, driver Natalia Kravets, 283 UAH
+  #4 Taras Hnatiuk, COMFORT, Completed, driver Dmytro Savchenko, 95 UAH
+  #5 Oksana Rudenko, ECO, InProgress, driver Natalia Kravets, 97 UAH
+-- fleet
+  1 Ivan Petrenko, ECO 4,8, free, earned 82,4
+  2 Oleksii Moroz, ECO 4, free, earned 0
+  3 Natalia Kravets, ECO 4,6, onride x1, earned 226,4
+  4 Dmytro Savchenko, COMFORT 4,9, free, earned 80,75
+  5 Yurii Bondarenko, COMFORT 4,5, break, earned 0
+  6 Andrii Melnyk, BUSINESS 4,7, free, earned 0
+  7 Serhii Tkachuk, BUSINESS 4,9, onride x1, earned 0
+  8 Viktor Hnatiuk, VAN 4,4, free, earned 0
+  9 Roman Shevchenko, ECO 3,8, free, earned 0
+  free 6, on ride 2 of 9
