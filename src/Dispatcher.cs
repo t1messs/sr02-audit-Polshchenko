@@ -98,7 +98,7 @@ public class Dispatcher
         Driver nearest = FindNearestDriver(ride, maxKm, out double nearestKm);
 
         // економу немає - даємо комфорт (клас поїздки змінюється, див. TD-04)
-        if (nearest == null && allowUpgrade && ride.CarClass == "ECO")
+        if (nearest == null && CanUpgrade(ride, allowUpgrade))
         {
             ride.CarClass = "COMFORT";
             Console.WriteLine("  upgrade: ride #" + ride.Id + " ECO -> COMFORT");
@@ -136,15 +136,7 @@ public class Dispatcher
         nearestKm = maxKm;
         foreach (Driver driver in repo.Drivers)
         {
-            if (driver.CarClass != ride.CarClass || driver.Rating <= MinRatingFor(ride.CarClass))
-                continue;
-            // вільний або везе, але бере ще одне (до 2)
-            bool canTakeRide = driver.Status == "free"
-                || driver.Status == "onride" && driver.ActiveRides < MaxActiveRides;
-            if (!canTakeRide)
-                continue;
-            bool hasRequiredSeat = !ride.ChildSeat || driver.HasChildSeat;
-            if (!hasRequiredSeat)
+            if (!IsEligible(driver, ride))
                 continue;
             double distance = Km(driver.X, driver.Y, ride.PickupX, ride.PickupY);
             if (distance <= nearestKm)
@@ -154,6 +146,23 @@ public class Dispatcher
             }
         }
         return nearest;
+    }
+
+    // водій підходить: той самий клас, рейтинг вище порогу, вільний чи бере другу поїздку,
+    // має крісло, якщо воно потрібне
+    private static bool IsEligible(Driver driver, Ride ride)
+    {
+        if (driver.CarClass != ride.CarClass || driver.Rating <= MinRatingFor(ride.CarClass))
+            return false;
+        bool canTakeRide = driver.Status == "free"
+            || driver.Status == "onride" && driver.ActiveRides < MaxActiveRides;
+        bool hasRequiredSeat = !ride.ChildSeat || driver.HasChildSeat;
+        return canTakeRide && hasRequiredSeat;
+    }
+
+    private static bool CanUpgrade(Ride ride, bool allowUpgrade)
+    {
+        return allowUpgrade && ride.CarClass == "ECO";
     }
 
     // фіксує призначення: поїздка, водій, журнал
