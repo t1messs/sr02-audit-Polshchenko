@@ -1,0 +1,14 @@
+# Результати складання .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+
+# Результати тестів і звіти покриття
+TestResults/
+coverage/
+
+# macOS
+.DS_Store
