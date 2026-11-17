@@ -120,9 +120,12 @@ public class Dispatcher
             if (d.CarClass != r.CarClass || d.Rating <= minRating)
                 continue;
             // вільний або везе, але бере ще одне (до 2)
-            if (d.Status == "free" || d.Status == "onride" && d.ActiveRides < MaxActiveRides)
+            bool canTakeRide = d.Status == "free"
+                || d.Status == "onride" && d.ActiveRides < MaxActiveRides;
+            if (canTakeRide)
             {
-                if (!r.ChildSeat || d.HasChildSeat)
+                bool hasRequiredSeat = !r.ChildSeat || d.HasChildSeat;
+                if (hasRequiredSeat)
                 {
                     double dist = Km(d.X, d.Y, r.PickupX, r.PickupY);
                     if (dist <= bestKm)
@@ -213,8 +216,9 @@ public class Dispatcher
     private bool IsRushHour()
     {
         int h = Now().Hour;
-        return h >= MorningRushStart && h < MorningRushEnd
-            || h >= EveningRushStart && h < EveningRushEnd;
+        bool isMorningRush = h >= MorningRushStart && h < MorningRushEnd;
+        bool isEveningRush = h >= EveningRushStart && h < EveningRushEnd;
+        return isMorningRush || isEveningRush;
     }
 
     public static double Km(double x1, double y1, double x2, double y2)
