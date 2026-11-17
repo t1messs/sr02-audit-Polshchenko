@@ -1,6 +1,7 @@
 namespace TaxiDispatch;
 
 // Звіти для старшого диспетчера
+// TODO TD-11: звіти не покриті тестами (0 %), бо пишуть прямо в консоль; строк — до СР 3
 public class ReportService
 {
     private DispatchStore repo;

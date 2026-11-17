@@ -9,6 +9,7 @@ public class Driver
     public string Name;
     public string Phone;
     public double X, Y;              // GPS, км від центру
+    // TODO TD-02: клас авто й стан водія — рядки; потрібні перелічення; строк — до кінця семестру
     public string CarClass;          // ECO, COMFORT, BUSINESS, VAN
     public string Plate;
     public double Rating;
@@ -34,6 +35,7 @@ public class Ride
     public int DriverId;            // 0 - ще не призначено
     public double PickupKm;
     public double Surge = 1.0;
+    // TODO TD-07: гроші в double, Math.Round округлює до парного; строк — до кінця семестру
     public double Fare;             // вартість або штраф
     public DateTime AssignedAt;
     public DateTime StartedAt;

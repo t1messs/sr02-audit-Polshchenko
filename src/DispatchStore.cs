@@ -1,8 +1,9 @@
 namespace TaxiDispatch;
 
-// Дані зміни в пам'яті. TODO: перенести в БД
+// Дані зміни в пам'яті.
 public class DispatchStore
 {
+    // TODO TD-08: глобальний змінюваний стан — Id і зони спільні для всіх сховищ; строк — до кінця семестру
     public static int nextRideId = 1;
     public static Dictionary<string, double> ZoneSurge = new Dictionary<string, double>();
     public List<Driver> Drivers = new List<Driver>();
@@ -54,6 +55,7 @@ public class DispatchStore
                 string[] kv = part.Split('=');
                 ZoneSurge[kv[0].Trim().ToUpper()] = int.Parse(kv[1]) / 100.0;
             }
+            // TODO TD-06: зона з помилкою (OLD_TOWN=1,15) зникає мовчки; строк — до СР 3
             catch (Exception) { }
         }
     }

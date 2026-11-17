@@ -3,7 +3,8 @@ namespace TaxiDispatch;
 // Диспетчер: замовлення, призначення водіїв, статуси
 public class Dispatcher
 {
-    // Рейтинг водія має бути строго вищим за поріг (див. TD-03 у реєстрі боргу).
+    // Рейтинг водія має бути строго вищим за поріг.
+    // TODO TD-03: вимога — «від 4.7 включно», а умова <= відкидає межу; строк — до СР 3
     private const double MinRating = 4.0;
     private const double MinBusinessRating = 4.7;
 
@@ -30,6 +31,7 @@ public class Dispatcher
     }
 
     // new order from operator or website; returns id or -1
+    // TODO TD-09: 9 параметрів — потрібен об'єкт-параметр RideRequest; строк — до кінця семестру
     public int CreateRide(string name, string phone, double px, double py, double dx, double dy,
         string carClass, bool childSeat, string zone)
     {
@@ -80,6 +82,7 @@ public class Dispatcher
         return cls;
     }
 
+    // TODO TD-01: коди -1/-2/-3 і поле LastNote замінити типом результату; строк — до кінця семестру
     // Призначення водія. Повертає Id водія або
     // -1 (немає замовлення), -2 (вже не нове), -3 (немає машини)
     public int Assign(int rideId, double maxKm, bool allowUpgrade)
@@ -99,10 +102,12 @@ public class Dispatcher
         ride.Surge = SurgeFor(ride);
         Driver nearest = FindNearestDriver(ride, maxKm, out double nearestKm);
 
-        // економу немає - даємо комфорт (клас поїздки змінюється, див. TD-04)
+        // економу немає - даємо комфорт
+        // TODO TD-04: обіцяно «за ціною економу», але клас стає COMFORT і тариф теж; строк — до СР 3
         if (nearest == null && CanUpgrade(ride, allowUpgrade))
         {
             ride.CarClass = "COMFORT";
+            // TODO TD-10: вивід у консоль — справа викликача, не диспетчера; строк — до кінця семестру
             Console.WriteLine("  upgrade: ride #" + ride.Id + " ECO -> COMFORT");
             return Assign(rideId, maxKm, false);
         }
@@ -197,7 +202,10 @@ public class Dispatcher
         if (to == RideStatus.Completed)
             CompleteRide(r, d);
         if (to == RideStatus.Cancelled)
-            r.Fare = fares.CancelFee(r);   // водія звільняє додаток
+        {
+            // TODO TD-05: водій лишається onride після скасування; строк — до СР 3
+            r.Fare = fares.CancelFee(r);
+        }
         r.Status = to;
         AuditLog.Write("ride #" + r.Id + " " + to);
         return true;

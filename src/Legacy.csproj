@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- TODO TD-12: підтримка .NET 8 завершилася 10.11.2026, перейти на net10.0; строк — до СР 3 -->
     <TargetFramework>net8.0</TargetFramework>
     <RollForward>Major</RollForward>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
