@@ -178,25 +178,23 @@ public class Dispatcher
         return driver.Id;
     }
 
+    // Дозволені переходи стану; призначення водія — лише через Assign.
+    private static readonly HashSet<(RideStatus From, RideStatus To)> AllowedTransitions =
+        new HashSet<(RideStatus From, RideStatus To)>
+        {
+            (RideStatus.Created, RideStatus.Cancelled),
+            (RideStatus.Assigned, RideStatus.InProgress),
+            (RideStatus.Assigned, RideStatus.Cancelled),
+            (RideStatus.InProgress, RideStatus.Completed),
+        };
+
     // додаток водія: на місці -> в дорозі -> завершено
     public bool ChangeStatus(int rideId, RideStatus to)
     {
         Ride r = repo.FindRide(rideId);
         if (r == null)
             return false;
-        bool ok = false;
-        switch (r.Status)
-        {
-            case RideStatus.Created:
-                ok = to == RideStatus.Cancelled;    // призначення - лише Assign
-                break;
-            case RideStatus.Assigned:
-                ok = to == RideStatus.InProgress || to == RideStatus.Cancelled;
-                break;
-            case RideStatus.InProgress:
-                ok = to == RideStatus.Completed;
-                break;
-        }
+        bool ok = AllowedTransitions.Contains((r.Status, to));
         if (!ok)
         {
             Console.WriteLine("  ! ride #" + r.Id + ": " + r.Status + " -> " + to + " rejected");
