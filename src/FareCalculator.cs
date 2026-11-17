@@ -3,45 +3,74 @@ namespace TaxiDispatch;
 // Тарифи за наказом від 01.03.2021 (грн)
 public class FareCalculator
 {
+    // Дороги не прямі: відстань по прямій множиться на 1,3.
+    private const double RoadFactor = 1.3;
+
+    // Ставки за кілометр за класом авто, грн.
+    private const double EcoPerKm = 9.0;
+    private const double ComfortPerKm = 12.0;
+    private const double BusinessPerKm = 18.5;
+    private const double VanPerKm = 14.0;
+
+    // Посадка й мінімальна вартість поїздки, грн.
+    private const double BaseFee = 40;
+    private const double MinFare = 70;
+
+    // Дитяче крісло, грн; очікування: перші 3 хв безкоштовно, далі 3 грн/хв.
+    private const double ChildSeatFee = 30;
+    private const int FreeWaitMinutes = 3;
+    private const int WaitFeePerMinute = 3;
+
+    // Штраф за скасування після призначення, грн.
+    private const double StandardCancelFee = 40;
+    private const double PremiumCancelFee = 80;
+
+    // Комісія сервісу: базова 20 %, 15 % для водія з рейтингом 4,9+ і 10+ поїздками за зміну,
+    // +5 % для бізнес-класу (оренда авто).
+    private const double BaseCommission = 0.2;
+    private const double LoyalCommission = 0.15;
+    private const double LoyalRating = 4.9;
+    private const int LoyalTrips = 10;
+    private const double BusinessCarRent = 0.05;
+
     // вартість після завершення поїздки
     public double Calc(Ride r)
     {
         string cls = r.CarClass;
         double dx = r.DropX - r.PickupX, dy = r.DropY - r.PickupY;
-        double km = Math.Sqrt(dx * dx + dy * dy) * 1.3;    // дороги не прямі
-        double perKm = 9.0;
+        double km = Math.Sqrt(dx * dx + dy * dy) * RoadFactor;
+        double perKm = EcoPerKm;
         if (cls == "COMFORT")
-            perKm = 12.0;
+            perKm = ComfortPerKm;
         else if (cls == "BUSINESS")
-            perKm = 18.5;
+            perKm = BusinessPerKm;
         else if (cls == "VAN")
-            perKm = 14.0;
-        double fare = 40 + km * perKm;
-        if (fare < 70)
-            fare = 70;
+            perKm = VanPerKm;
+        double fare = BaseFee + km * perKm;
+        if (fare < MinFare)
+            fare = MinFare;
         fare = fare * r.Surge;
         if (r.ChildSeat)
-            fare = fare + 30;
-        // очікування: 3 хв безкоштовно, далі 3 грн/хв
+            fare = fare + ChildSeatFee;
         int waitMin = (int)(r.StartedAt - r.AssignedAt).TotalMinutes;
-        if (waitMin > 3)
-            fare = fare + (waitMin - 3) * 3;
+        if (waitMin > FreeWaitMinutes)
+            fare = fare + (waitMin - FreeWaitMinutes) * WaitFeePerMinute;
         return Math.Round(fare);
     }
 
     // попередня ціна (без очікування і крісла)
     public double Estimate(string cls, double km)
     {
-        double perKm = 9.0;
+        double perKm = EcoPerKm;
         if (cls == "COMFORT")
-            perKm = 12.0;
+            perKm = ComfortPerKm;
         else if (cls == "BUSINESS")
-            perKm = 18.5;
+            perKm = BusinessPerKm;
         else if (cls == "VAN")
-            perKm = 14.0;
-        double fare = 40 + km * perKm;
-        if (fare < 70)
-            fare = 70;
+            perKm = VanPerKm;
+        double fare = BaseFee + km * perKm;
+        if (fare < MinFare)
+            fare = MinFare;
         return Math.Round(fare);
     }
 
@@ -51,18 +80,18 @@ public class FareCalculator
         if (r.Status != RideStatus.Assigned)
             return 0;
         if (r.CarClass == "BUSINESS" || r.CarClass == "VAN")
-            return 80;
-        return 40;
+            return PremiumCancelFee;
+        return StandardCancelFee;
     }
 
-    // комісія сервісу 20%, для рейтингу 4.9+ - 15%
+    // виплата водію: вартість мінус комісія сервісу
     public double DriverPayout(Driver d, double fare)
     {
-        double commission = 0.2;
-        if (d.Rating >= 4.9 && d.TripsToday >= 10)
-            commission = 0.15;
+        double commission = BaseCommission;
+        if (d.Rating >= LoyalRating && d.TripsToday >= LoyalTrips)
+            commission = LoyalCommission;
         if (d.CarClass == "BUSINESS")
-            commission = commission + 0.05;   // оренда авто
+            commission = commission + BusinessCarRent;
         return Math.Round(fare * (1 - commission), 2);
     }
 }
