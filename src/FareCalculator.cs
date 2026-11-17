@@ -36,19 +36,7 @@ public class FareCalculator
     // вартість після завершення поїздки
     public double Calc(Ride r)
     {
-        string cls = r.CarClass;
-        double dx = r.DropX - r.PickupX, dy = r.DropY - r.PickupY;
-        double km = Math.Sqrt(dx * dx + dy * dy) * RoadFactor;
-        double perKm = EcoPerKm;
-        if (cls == "COMFORT")
-            perKm = ComfortPerKm;
-        else if (cls == "BUSINESS")
-            perKm = BusinessPerKm;
-        else if (cls == "VAN")
-            perKm = VanPerKm;
-        double fare = BaseFee + km * perKm;
-        if (fare < MinFare)
-            fare = MinFare;
+        double fare = BaseFare(r.CarClass, RouteKm(r));
         fare = fare * r.Surge;
         if (r.ChildSeat)
             fare = fare + ChildSeatFee;
@@ -61,6 +49,12 @@ public class FareCalculator
     // попередня ціна (без очікування і крісла)
     public double Estimate(string cls, double km)
     {
+        return Math.Round(BaseFare(cls, km));
+    }
+
+    // тариф: посадка + ставка класу × км, не менше мінімальної ціни; без коефіцієнта
+    private static double BaseFare(string cls, double km)
+    {
         double perKm = EcoPerKm;
         if (cls == "COMFORT")
             perKm = ComfortPerKm;
@@ -71,7 +65,14 @@ public class FareCalculator
         double fare = BaseFee + km * perKm;
         if (fare < MinFare)
             fare = MinFare;
-        return Math.Round(fare);
+        return fare;
+    }
+
+    // довжина маршруту дорогами, км
+    private static double RouteKm(Ride r)
+    {
+        double dx = r.DropX - r.PickupX, dy = r.DropY - r.PickupY;
+        return Math.Sqrt(dx * dx + dy * dy) * RoadFactor;
     }
 
     // штраф за скасування після призначення
