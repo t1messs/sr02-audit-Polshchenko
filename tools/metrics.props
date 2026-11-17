@@ -1,15 +1,15 @@
 <Project>
   <!--
     Вимірювання цикломатичної складності інструментом CA1502 без зміни коду проєкту.
-    Запуск із кореня репозиторію:
-      dotnet build src -p:DirectoryBuildPropsPath=$PWD/tools/metrics.props --no-incremental
     Поріг 1 у CodeMetricsConfig.txt змушує CA1502 повідомити складність кожного методу, де CC >= 2.
+    Запуск — tools/measure-cc.sh.
   -->
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
   </PropertyGroup>
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)CodeMetricsConfig.txt" />
-    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)metrics.globalconfig" />
+    <!-- Глобальний конфіг аналізаторів передається компілятору через EditorConfigFiles. -->
+    <EditorConfigFiles Include="$(MSBuildThisFileDirectory)metrics.globalconfig" />
   </ItemGroup>
 </Project>

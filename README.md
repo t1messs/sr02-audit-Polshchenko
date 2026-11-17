@@ -33,9 +33,10 @@ dotnet run --project src
 dotnet test
 ```
 
-Цикломатична складність методів за інструментом:
+Цикломатична складність методів за інструментом (CA1502, поріг 1):
 
 ```bash
-dotnet build src -p:DirectoryBuildPropsPath=$PWD/tools/metrics.props --no-incremental 2>&1 \
-  | grep CA1502 | sort -u
+bash tools/measure-cc.sh
 ```
+Скрипт тимчасово підключає налаштування з `tools/`, збирає `src/` і прибирає за собою;
+код проєкту не змінюється.
