@@ -3,8 +3,6 @@ namespace TaxiDispatch;
 // Диспетчер: замовлення, призначення водіїв, статуси
 public class Dispatcher
 {
-    // черга на стоянках - вимкнули після переходу на GPS
-    public static bool UseZoneQueue = false;
     private DispatchStore repo;
     private FareCalculator fares = new FareCalculator();
     public string LastNote;     // причина відмови для оператора
@@ -99,19 +97,6 @@ public class Dispatcher
 
         Driver best = null;
         double bestKm = maxKm;
-        if (UseZoneQueue)
-        {
-            // стоянка: бере перший у черзі
-            best = repo.Drivers.Find(x => x.Zone == r.Zone);
-            r.DriverId = best.Id;
-            r.Status = RideStatus.Assigned;
-            r.AssignedAt = Now();
-            best.Status = "onride";
-            best.ActiveRides++;
-            AuditLog.Write("ride #" + r.Id + " -> driver " + best.Id + ", surge " + r.Surge);
-            return best.Id;
-        }
-
         // мін. рейтинг 4.0, бізнес - від 4.7 включно
         double minRating = r.CarClass == "BUSINESS" ? 4.7 : 4.0;
         foreach (Driver d in repo.Drivers)
