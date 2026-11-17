@@ -12,6 +12,13 @@ public class FareCalculator
     private const double BusinessPerKm = 18.5;
     private const double VanPerKm = 14.0;
 
+    private static readonly Dictionary<string, double> PerKmByClass = new Dictionary<string, double>
+    {
+        { "COMFORT", ComfortPerKm },
+        { "BUSINESS", BusinessPerKm },
+        { "VAN", VanPerKm },
+    };
+
     // Посадка й мінімальна вартість поїздки, грн.
     private const double BaseFee = 40;
     private const double MinFare = 70;
@@ -61,13 +68,10 @@ public class FareCalculator
     // тариф: посадка + ставка класу × км, не менше мінімальної ціни; без коефіцієнта
     private static double BaseFare(string cls, double km)
     {
+        // невідомий клас (і null) — за ставкою економу, як і раніше
         double perKm = EcoPerKm;
-        if (cls == "COMFORT")
-            perKm = ComfortPerKm;
-        else if (cls == "BUSINESS")
-            perKm = BusinessPerKm;
-        else if (cls == "VAN")
-            perKm = VanPerKm;
+        if (cls != null && PerKmByClass.TryGetValue(cls, out double rate))
+            perKm = rate;
         double fare = BaseFee + km * perKm;
         if (fare < MinFare)
             fare = MinFare;
