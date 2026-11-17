@@ -46,6 +46,12 @@ public class FareCalculator
         return Math.Round(fare);
     }
 
+    // ціна відкритої поїздки для звіту: тариф × коефіцієнт, без крісла й очікування
+    public double OpenRidePrice(Ride r)
+    {
+        return Math.Round(BaseFare(r.CarClass, RouteKm(r)) * r.Surge);
+    }
+
     // попередня ціна (без очікування і крісла)
     public double Estimate(string cls, double km)
     {

@@ -4,13 +4,14 @@ namespace TaxiDispatch;
 public class ReportService
 {
     private DispatchStore repo;
+    private FareCalculator fares = new FareCalculator();
 
     public ReportService(DispatchStore repo)
     {
         this.repo = repo;
     }
 
-    // open rides show estimated price (same tariff as FareCalculator)
+    // відкриті поїздки показують попередню ціну за тарифом FareCalculator
     public void PrintRides()
     {
         foreach (Ride r in repo.Rides)
@@ -21,21 +22,7 @@ public class ReportService
                 drv = d.Name;
             double price = r.Fare;
             if (r.Status != RideStatus.Completed && r.Status != RideStatus.Cancelled)
-            {
-                string cls = r.CarClass;
-                double km = Dispatcher.Km(r.PickupX, r.PickupY, r.DropX, r.DropY) * 1.3;
-                double perKm = 9.0;
-                if (cls == "COMFORT")
-                    perKm = 12.0;
-                else if (cls == "BUSINESS")
-                    perKm = 18.5;
-                else if (cls == "VAN")
-                    perKm = 14.0;
-                double fare = 40 + km * perKm;
-                if (fare < 70)
-                    fare = 70;
-                price = Math.Round(fare * r.Surge);
-            }
+                price = fares.OpenRidePrice(r);
             Console.WriteLine("  #" + r.Id + " " + r.Passenger + ", " + r.CarClass + ", "
                 + r.Status + ", driver " + drv + ", " + price + " UAH");
         }
