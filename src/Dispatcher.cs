@@ -107,11 +107,6 @@ public class Dispatcher
                 k = k + RushHourSurge;
         }
         r.Surge = Math.Min(k, MaxSurge);
-        //double k = 1 + repo.CountWaiting() * 0.05;
-        //if (r.Zone == "AIRPORT")
-        //    k = k + 0.3;
-        //if (k > 3) k = 3;
-        //r.Surge = k;
 
         // попередня ціна - водій бачить її до прийняття
         double est = fares.Estimate(r.CarClass,
@@ -130,9 +125,6 @@ public class Dispatcher
                 if (!r.ChildSeat || d.HasChildSeat)
                 {
                     double dist = Km(d.X, d.Y, r.PickupX, r.PickupY);
-                    //double dist = Math.Abs(d.X - r.PickupX) + Math.Abs(d.Y - r.PickupY);
-                    //if (d.Status == "onride")
-                    //    dist = dist + 2;
                     if (dist <= bestKm)
                     {
                         best = d;
@@ -141,13 +133,6 @@ public class Dispatcher
                 }
             }
         }
-        /* старий вибір (до 2023): найкращий рейтинг у радіусі
-        foreach (Driver d in repo.Drivers)
-            if (d.CarClass == r.CarClass && d.Status == "free"
-                && Km(d.X, d.Y, r.PickupX, r.PickupY) <= maxKm)
-                if (best == null || d.Rating > best.Rating)
-                    best = d;
-        */
 
         // економу немає - даємо комфорт за ціною економу
         if (best == null && allowUpgrade && r.CarClass == "ECO")
