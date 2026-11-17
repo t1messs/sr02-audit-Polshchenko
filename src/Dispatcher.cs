@@ -204,18 +204,7 @@ public class Dispatcher
         if (to == RideStatus.InProgress)
             r.StartedAt = Now();
         if (to == RideStatus.Completed)
-        {
-            // До Completed веде лише Assigned -> InProgress, тож водій уже призначений.
-            System.Diagnostics.Debug.Assert(d != null, "Completed ride must have a driver");
-            r.Fare = fares.Calc(r);
-            d.ActiveRides--;
-            if (d.ActiveRides == 0)
-                d.Status = "free";
-            d.X = r.DropX;     // водій там, де висадив
-            d.Y = r.DropY;
-            d.TripsToday++;
-            d.EarnedToday = d.EarnedToday + fares.DriverPayout(d, r.Fare);
-        }
+            CompleteRide(r, d);
         if (to == RideStatus.Cancelled)
             r.Fare = fares.CancelFee(r);   // водія звільняє додаток
         r.Status = to;
@@ -226,6 +215,21 @@ public class Dispatcher
     private static double MinRatingFor(string carClass)
     {
         return carClass == "BUSINESS" ? MinBusinessRating : MinRating;
+    }
+
+    // завершення: вартість, звільнення водія, його нове місце й заробіток
+    private void CompleteRide(Ride r, Driver d)
+    {
+        // До Completed веде лише Assigned -> InProgress, тож водій уже призначений.
+        System.Diagnostics.Debug.Assert(d != null, "Completed ride must have a driver");
+        r.Fare = fares.Calc(r);
+        d.ActiveRides--;
+        if (d.ActiveRides == 0)
+            d.Status = "free";
+        d.X = r.DropX;     // водій там, де висадив
+        d.Y = r.DropY;
+        d.TripsToday++;
+        d.EarnedToday = d.EarnedToday + fares.DriverPayout(d, r.Fare);
     }
 
     public int CountFree()
