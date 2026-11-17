@@ -3,18 +3,6 @@ namespace TaxiDispatch;
 // Диспетчер: замовлення, призначення водіїв, статуси
 public class Dispatcher
 {
-    // Коефіцієнт попиту: надбавка за кожне замовлення понад кількість вільних машин,
-    // надбавка в години пік і стеля коефіцієнта.
-    private const double SurgePerExtraRide = 0.15;
-    private const double RushHourSurge = 0.2;
-    private const double MaxSurge = 2.5;
-
-    // Години пік: [7; 10) і [17; 20) за місцевим часом.
-    private const int MorningRushStart = 7;
-    private const int MorningRushEnd = 10;
-    private const int EveningRushStart = 17;
-    private const int EveningRushEnd = 20;
-
     // Рейтинг водія має бути строго вищим за поріг (див. TD-03 у реєстрі боргу).
     private const double MinRating = 4.0;
     private const double MinBusinessRating = 4.7;
@@ -27,6 +15,7 @@ public class Dispatcher
 
     private DispatchStore repo;
     private FareCalculator fares = new FareCalculator();
+    private SurgePolicy surgePolicy = new SurgePolicy();
     public string LastNote;     // причина відмови для оператора
 
     public Dispatcher(DispatchStore store)
@@ -125,21 +114,10 @@ public class Dispatcher
         return AssignDriver(ride, nearest, nearestKm);
     }
 
-    // коефіцієнт: зона + нестача машин + година пік
+    // коефіцієнт: зона + нестача машин + година пік (правило — у SurgePolicy)
     private double SurgeFor(Ride ride)
     {
-        double surge = 1.0;
-        if (DispatchStore.ZoneSurge.ContainsKey(ride.Zone))
-            surge = DispatchStore.ZoneSurge[ride.Zone];
-        int waitingRides = repo.CountWaiting();
-        int freeDrivers = CountFree();
-        if (waitingRides > freeDrivers)
-        {
-            surge = surge + SurgePerExtraRide * (waitingRides - freeDrivers);
-            if (IsRushHour())
-                surge = surge + RushHourSurge;
-        }
-        return Math.Min(surge, MaxSurge);
+        return surgePolicy.For(ride.Zone, repo.CountWaiting(), CountFree(), Now());
     }
 
     // найближчий придатний водій у радіусі maxKm (межа включно)
@@ -252,14 +230,6 @@ public class Dispatcher
             if (d.Status == "free")
                 n++;
         return n;
-    }
-
-    private bool IsRushHour()
-    {
-        int h = Now().Hour;
-        bool isMorningRush = h >= MorningRushStart && h < MorningRushEnd;
-        bool isEveningRush = h >= EveningRushStart && h < EveningRushEnd;
-        return isMorningRush || isEveningRush;
     }
 
     public static double Km(double x1, double y1, double x2, double y2)
