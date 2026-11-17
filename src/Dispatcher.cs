@@ -108,10 +108,6 @@ public class Dispatcher
         }
         r.Surge = Math.Min(k, MaxSurge);
 
-        // попередня ціна - водій бачить її до прийняття
-        double est = fares.Estimate(r.CarClass,
-            Km(r.PickupX, r.PickupY, r.DropX, r.DropY) * 1.3);
-
         Driver best = null;
         double bestKm = maxKm;
         double minRating = r.CarClass == "BUSINESS" ? MinBusinessRating : MinRating;
